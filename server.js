@@ -1,34 +1,52 @@
+// server.js
 const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const { MongoClient } = require('mongodb');
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, 'src')));
+// === MongoDB Setup ===
+const client = new MongoClient(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+let libraryCollection;
 
+async function connectToMongo() {
+  await client.connect();
+  const db = client.db('myswitchlife');
+  libraryCollection = db.collection('library');
+  console.log('✅ MongoDB connected');
+}
+
+// === Twitch/IGDB Token Management ===
 let accessToken = '';
 
-// === Token Management ===
 async function getAccessToken() {
   try {
-    const resp = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-      params: {
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-        grant_type: 'client_credentials',
-      },
-    });
+    const resp = await axios.post(
+      'https://id.twitch.tv/oauth2/token',
+      null,
+      {
+        params: {
+          client_id: process.env.CLIENT_ID,
+          client_secret: process.env.CLIENT_SECRET,
+          grant_type: 'client_credentials',
+        },
+      }
+    );
     accessToken = resp.data.access_token;
-    console.log('Access token obtained.');
+    console.log('✅ Access token obtained.');
   } catch (e) {
-    console.error('Token fetch error:', e.response?.data || e.message);
+    console.error('❌ Token fetch error:', e.response?.data || e.message);
   }
 }
 
@@ -38,12 +56,12 @@ async function ensureAccessToken() {
   }
 }
 
-// === IGDB Query Builder ===
+// Build an IGDB query for popular Nintendo franchises
 function igdbQuery(limit) {
   const franchises = [
     'mario', 'zelda', 'metroid', 'animal crossing',
     'pokemon', 'kirby', 'donkey kong', 'splatoon',
-    'fire emblem', 'super smash bros'
+    'fire emblem', 'super smash bros',
   ];
   const nameFilter = franchises.map(k => `name ~ *"${k}"*`).join(' | ');
   return `
@@ -57,40 +75,82 @@ function igdbQuery(limit) {
   `;
 }
 
-// === API Routes ===
+// === Library Routes (MongoDB) ===
 
-// Game library (30 games)
+// GET /api/games — return saved library
 app.get('/api/games', async (req, res) => {
   try {
-    await ensureAccessToken();
-    const igdb = igdbQuery(30);
-    const resp = await axios.post(
-      'https://api.igdb.com/v4/games',
-      igdb,
-      {
-        headers: {
-          'Client-ID': process.env.CLIENT_ID,
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'text/plain',
-        },
-      }
-    );
-    if (!Array.isArray(resp.data)) throw new Error('Invalid IGDB response');
-    res.json(resp.data);
+    const games = await libraryCollection.find({}).toArray();
+    res.status(200).json(games);
   } catch (e) {
-    console.error('games error:', e.response?.data || e.message);
-    res.status(500).json({ error: 'cannot fetch library' });
+    console.error('❌ /api/games GET error:', e);
+    res.status(500).json({ error: 'Failed to fetch library' });
   }
 });
 
-// All games (100 games)
+// POST /api/games — add or update a game with last_played
+app.post('/api/games', async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      cover,
+      summary,
+      first_release_date,
+      last_played,
+    } = req.body;
+
+    if (!id || !name || !cover) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    await libraryCollection.updateOne(
+      { id },
+      {
+        $set: {
+          id,
+          name,
+          cover,
+          summary,
+          first_release_date,
+          last_played: last_played || new Date().toISOString().split('T')[0],
+        },
+      },
+      { upsert: true }
+    );
+
+    res.status(200).json({ success: true });
+  } catch (e) {
+    console.error('❌ /api/games POST error:', e);
+    res.status(500).json({ error: 'Failed to save game' });
+  }
+});
+
+// DELETE /api/games?id=123 — remove a game
+app.delete('/api/games', async (req, res) => {
+  try {
+    const id = parseInt(req.query.id, 10);
+    if (!id) {
+      return res.status(400).json({ error: 'No ID provided' });
+    }
+    await libraryCollection.deleteOne({ id });
+    res.status(200).json({ success: true });
+  } catch (e) {
+    console.error('❌ /api/games DELETE error:', e);
+    res.status(500).json({ error: 'Failed to delete game' });
+  }
+});
+
+// === IGDB Proxy Routes ===
+
+// GET /api/all-games — top 100 popular games
 app.get('/api/all-games', async (req, res) => {
   try {
     await ensureAccessToken();
-    const igdb = igdbQuery(100);
-    const resp = await axios.post(
+    const query = igdbQuery(100);
+    const igdbRes = await axios.post(
       'https://api.igdb.com/v4/games',
-      igdb,
+      query,
       {
         headers: {
           'Client-ID': process.env.CLIENT_ID,
@@ -99,15 +159,14 @@ app.get('/api/all-games', async (req, res) => {
         },
       }
     );
-    if (!Array.isArray(resp.data)) throw new Error('Invalid IGDB response');
-    res.json(resp.data);
+    res.status(200).json(igdbRes.data);
   } catch (e) {
-    console.error('all-games error:', e.response?.data || e.message);
-    res.status(500).json({ error: 'cannot fetch all games' });
+    console.error('❌ /api/all-games error:', e.response?.data || e.message);
+    res.status(500).json({ error: 'Cannot fetch all games' });
   }
 });
 
-// Recent games (Mario-related)
+// GET /api/recent-games — top Mario titles (you can customize later)
 app.get('/api/recent-games', async (req, res) => {
   try {
     await ensureAccessToken();
@@ -120,7 +179,7 @@ app.get('/api/recent-games', async (req, res) => {
       sort aggregated_rating desc;
       limit 20;
     `;
-    const resp = await axios.post(
+    const igdbRes = await axios.post(
       'https://api.igdb.com/v4/games',
       query,
       {
@@ -131,16 +190,25 @@ app.get('/api/recent-games', async (req, res) => {
         },
       }
     );
-    if (!Array.isArray(resp.data)) throw new Error('Invalid IGDB response');
-    res.json(resp.data);
+    res.status(200).json(igdbRes.data);
   } catch (e) {
-    console.error('recent error:', e.response?.data || e.message);
-    res.status(500).json({ error: 'cannot fetch recent' });
+    console.error('❌ /api/recent-games error:', e.response?.data || e.message);
+    res.status(500).json({ error: 'Cannot fetch recent' });
   }
 });
 
-// Start server
-app.listen(3000, async () => {
-  await getAccessToken();
-  console.log('Server listening at http://localhost:3000');
+// Serve index.html for root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// === Start Server ===
+async function start() {
+  await getAccessToken();
+  await connectToMongo();
+  app.listen(3000, () => {
+    console.log('🟢 Server running at http://localhost:3000');
+  });
+}
+
+start();

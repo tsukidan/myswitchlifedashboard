@@ -1,4 +1,4 @@
-// src/js/library.js
+// === public/library.js ===
 // Load and render the full game library with delete buttons and modal data
 
 async function loadFullLibrary() {
@@ -14,7 +14,6 @@ async function loadFullLibrary() {
         ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}`
         : 'https://via.placeholder.com/264x374?text=No+Cover';
 
-      // format release date if available (IGDB returns UNIX timestamp)
       const release = game.first_release_date
         ? new Date(game.first_release_date * 1000).toLocaleDateString()
         : 'Unknown release';
@@ -23,6 +22,7 @@ async function loadFullLibrary() {
 
       return `
         <div class="library-game"
+             data-id="${game.id}"
              data-name="${game.name}"
              data-cover="${coverURL}"
              data-release="${release}"
@@ -46,17 +46,38 @@ async function loadFullLibrary() {
     loading.style.display = 'none';
     grid.style.display   = 'grid';
 
-    // Initialize tilt effect on all covers
     VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
       max: 25, speed: 400, scale: 1.05,
       glare: true, "max-glare": 0.3, perspective: 1000
     });
 
-    // Attach remove handlers
-    grid.querySelectorAll('.remove-game-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.closest('.library-game').remove();
+    const modal = document.getElementById('game-modal');
+    const modalCover = document.getElementById('modal-cover');
+    const modalTitle = document.getElementById('modal-title');
+    const modalTitleBottom = document.getElementById('modal-title-bottom');
+    const modalRelease = document.getElementById('modal-release');
+    const modalSummary = document.getElementById('modal-summary');
+
+    function bindModal(card) {
+      card.addEventListener('click', () => {
+        modalCover.src = card.dataset.cover;
+        modalTitle.textContent = card.dataset.name;
+        modalTitleBottom.textContent = card.dataset.name;
+        modalRelease.textContent = card.dataset.release;
+        modalSummary.textContent = card.dataset.summary;
+        modal.classList.add('open');
       });
+    }
+
+    grid.querySelectorAll('.library-game').forEach(card => {
+      const btn = card.querySelector('.remove-game-btn');
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = card.dataset.id;
+        await fetch(`/api/games?id=${id}`, { method: 'DELETE' });
+        card.remove();
+      });
+      bindModal(card);
     });
 
   } catch (err) {
@@ -67,3 +88,4 @@ async function loadFullLibrary() {
 }
 
 window.addEventListener('DOMContentLoaded', loadFullLibrary);
+window.loadFullLibrary = loadFullLibrary;

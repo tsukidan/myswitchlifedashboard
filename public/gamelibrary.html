@@ -8,25 +8,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
-<div class="navbar">
+  <div class="navbar">
     <div class="nav-left">
       <a href="index.html">
         <img src="/img/myswitchlifelogo.png" alt="MySwitchLife Logo" class="myswitchlife-logo"/>
       </a>
     </div>
-  <div class="nav-center">
-    <img src="/img/nintendologo.png" alt="Nintendo Logo" class="nintendo-logo"/>
+    <div class="nav-center">
+      <img src="/img/nintendologo.png" alt="Nintendo Logo" class="nintendo-logo"/>
+    </div>
+    <a href="usersettings.html" class="account-button" title="User Settings">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 20a6 6 0 0 0-12 0"/>
+        <circle cx="12" cy="10" r="4"/>
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+    </a>
   </div>
-  <!-- Updated: wrap the icon in an <a> -->
-  <a href="usersettings.html" class="account-button" title="User Settings">
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
-         fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M18 20a6 6 0 0 0-12 0"/>
-      <circle cx="12" cy="10" r="4"/>
-      <circle cx="12" cy="12" r="10"/>
-    </svg>
-  </a>
-</div>
 
   <div class="game-library" style="margin:40px auto; max-width:1200px;">
     <h3>Your Game Library</h3>
@@ -55,12 +54,11 @@
     </p>
   </div>
 
-  <!-- Modal Overlay -->
+  <!-- Main Modal Overlay -->
   <div id="game-modal" class="modal-overlay">
     <div class="modal-content">
       <button id="modal-close" class="modal-close">&times;</button>
       <div class="modal-left">
-        <!-- canvas will show the empty case + game art -->
         <canvas id="case-canvas"></canvas>
         <div id="modal-title-bottom" class="modal-title-bottom"></div>
       </div>
@@ -72,6 +70,17 @@
     </div>
   </div>
 
+  <!-- Last Played Modal -->
+  <div id="last-played-modal" class="modal-overlay">
+    <div class="modal-content small-modal">
+      <h2>When did you last play this game?</h2>
+      <input type="date" id="last-played-date" />
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button id="last-played-cancel" class="icon-button">Cancel</button>
+        <button id="last-played-confirm" class="icon-button">Save</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
   <script src="/js/library.js"></script>

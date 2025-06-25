@@ -1,63 +1,65 @@
 // api/games.js
-const axios = require('axios');
+const { MongoClient } = require('mongodb');
 
-let accessToken = '';
+let client;
+let collection;
 
-async function getAccessToken() {
-  const resp = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-    params: {
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      grant_type: 'client_credentials',
-    },
-  });
-  accessToken = resp.data.access_token;
-}
-
-async function ensureAccessToken() {
-  if (!accessToken) {
-    await getAccessToken();
+async function getCollection() {
+  if (!collection) {
+    client = new MongoClient(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    await client.connect();
+    const db = client.db('myswitchlife');
+    collection = db.collection('library');
   }
-}
-
-function igdbQuery(limit) {
-  const franchises = [
-    'mario', 'zelda', 'metroid', 'animal crossing',
-    'pokemon', 'kirby', 'donkey kong', 'splatoon',
-    'fire emblem', 'super smash bros',
-  ];
-  const nameFilter = franchises.map(k => `name ~ *"${k}"*`).join(' | ');
-  return `
-    fields name, cover.url, first_release_date, summary;
-    where platforms=(130)
-      & cover != null
-      & age_ratings.rating != (6)
-      & (${nameFilter});
-    sort aggregated_rating desc;
-    limit ${limit};
-  `;
+  return collection;
 }
 
 module.exports = async (req, res) => {
-  try {
-    await ensureAccessToken();
+  const col = await getCollection();
 
-    const query = igdbQuery(30);
-    const igdbRes = await axios.post(
-      'https://api.igdb.com/v4/games',
-      query,
-      {
-        headers: {
-          'Client-ID': process.env.CLIENT_ID,
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'text/plain',
-        },
-      }
-    );
-
-    res.status(200).json(igdbRes.data);
-  } catch (err) {
-    console.error('games error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'cannot fetch library' });
+  if (req.method === 'GET') {
+    // Return the saved library
+    const games = await col.find({}).toArray();
+    return res.status(200).json(games);
   }
+
+  if (req.method === 'POST') {
+    // Add or update a game, including last_played
+    const { id, name, cover, summary, first_release_date, last_played } = req.body;
+    if (!id || !name || !cover) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    await col.updateOne(
+      { id },
+      {
+        $set: {
+          id,
+          name,
+          cover,
+          summary,
+          first_release_date,
+          last_played: last_played || new Date().toISOString().split('T')[0]
+        }
+      },
+      { upsert: true }
+    );
+    return res.status(200).json({ success: true });
+  }
+
+  if (req.method === 'DELETE') {
+    // Remove by ?id=…
+    const id = parseInt(req.query.id, 10);
+    if (!id) {
+      return res.status(400).json({ error: 'No ID provided' });
+    }
+    await col.deleteOne({ id });
+    return res.status(200).json({ success: true });
+  }
+
+  // Method not allowed
+  res.setHeader('Allow', ['GET','POST','DELETE']);
+  return res.status(405).end(`Method ${req.method} Not Allowed`);
 };

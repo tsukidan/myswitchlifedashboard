@@ -1,41 +1,66 @@
+// public/js/main.js
+
 async function loadDashboardGames() {
   try {
-    // === Load Recent Activity ===
-    const recentRes = await fetch('/api/recent-games');
-    const recentGames = await recentRes.json();
+    // === Load Recent Activity from your own DB ===
+    const libRes = await fetch('/api/games');
+    const allGames = await libRes.json();
+
+    // Filter to only those with last_played, sort most recent first, take top 9
+    const recent = allGames
+      .filter(game => game.last_played)
+      .sort((a, b) => new Date(b.last_played) - new Date(a.last_played))
+      .slice(0, 9);
 
     const recentContainer = document.getElementById('recent-activity-container');
-    const recentLoading = document.getElementById('recent-activity-loading');
+    const recentLoading   = document.getElementById('recent-activity-loading');
 
-    // Generate ascending "last played" days: 1 to 9
-    const lastPlayedDays = Array.from({ length: 9 }, (_, i) => i + 1);
+    if (recent.length === 0) {
+      recentContainer.innerHTML =
+        '<p style="color:#666; padding:20px;">No recent activity yet.</p>';
+      recentContainer.style.display = 'block';
+    } else {
+      recentContainer.innerHTML = recent.map(game => {
+        // build the cover URL (same as elsewhere)
+        const imgURL = game.cover?.url
+          ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}`
+          : 'https://via.placeholder.com/60x80?text=No+Cover';
 
-    recentContainer.innerHTML = recentGames.slice(0, 9).map((game, idx) => {
-      const imgURL = game.cover?.image_id
-        ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
-        : 'https://via.placeholder.com/60x80?text=No+Cover';
+        // compute days ago
+        const diffMs   = Date.now() - new Date(game.last_played).getTime();
+        const daysAgo  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      const daysAgo = lastPlayedDays[idx];
-
-      return `
-        <div class="game-entry">
-          <img class="game-cover tilt-effect" src="${imgURL}" alt="${game.name}" />
-          <div class="game-info">
-            <strong>${game.name}</strong>
-            <em class="last-played-text">Last played: ${daysAgo} day${daysAgo > 1 ? 's' : ''} ago</em>
+        return `
+          <div class="game-entry">
+            <img class="game-cover tilt-effect" src="${imgURL}" alt="${game.name}" />
+            <div class="game-info">
+              <strong>${game.name}</strong>
+              <em class="last-played-text">
+                Last played: ${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago
+              </em>
+            </div>
           </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+      recentContainer.style.display = 'flex';
+    }
 
     recentLoading.style.display = 'none';
-    recentContainer.style.display = 'flex';
 
-    // === Load Game Library ===
-    const libraryRes = await fetch('/api/games');
+    // Re-init tilt effect for recent covers
+    VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
+      max: 25,
+      speed: 400,
+      scale: 1.05,
+      glare: true,
+      'max-glare': 0.3,
+      perspective: 1000
+    });
+
+    // === Load Game Library from your DB ===
+    const libraryRes   = await fetch('/api/games');
     const libraryGames = await libraryRes.json();
-
-    const libraryGrid = document.getElementById('game-library-grid');
+    const libraryGrid  = document.getElementById('game-library-grid');
     const libraryLoading = document.getElementById('game-library-loading');
 
     libraryGrid.innerHTML = libraryGames.map(game => {
@@ -52,28 +77,29 @@ async function loadDashboardGames() {
     }).join('');
 
     libraryLoading.style.display = 'none';
-    libraryGrid.style.display = 'grid';
+    libraryGrid.style.display   = 'grid';
 
-    // Apply tilt effect
-    VanillaTilt.init(document.querySelectorAll(".tilt-effect"), {
+    // One more tilt init for library covers
+    VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
       max: 25,
       speed: 400,
       scale: 1.05,
       glare: true,
-      "max-glare": 0.3,
+      'max-glare': 0.3,
       perspective: 1000
     });
 
   } catch (err) {
     console.error('Error loading dashboard data:', err);
+    const recentLoading = document.getElementById('recent-activity-loading');
+    recentLoading.textContent = 'Could not load recent activity.';
   }
 }
 
-// === Dynamic Goal Management ===
+// === Dynamic Goal Management (unchanged) ===
 function setupGoalManagement() {
-  const goalList = document.getElementById('goal-list');
+  const goalList   = document.getElementById('goal-list');
   const addGoalBtn = document.getElementById('add-goal-btn');
-
   if (!goalList || !addGoalBtn) return;
 
   addGoalBtn.addEventListener('click', () => {
@@ -83,7 +109,8 @@ function setupGoalManagement() {
       <input type="checkbox" />
       <span contenteditable="true">New Goal</span>
       <button class="remove-goal-btn icon-button" title="Remove Goal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
           <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
           <line x1="10" x2="10" y1="11" y2="17"/>
@@ -103,7 +130,7 @@ function setupGoalManagement() {
   });
 }
 
-// === Init on page load ===
+// === Initialize on page load ===
 window.addEventListener('DOMContentLoaded', () => {
   loadDashboardGames();
   setupGoalManagement();
