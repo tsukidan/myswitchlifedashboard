@@ -34,7 +34,7 @@ body {
 .myswitchlife-logo,
 .nintendo-logo {
   display: block;
-  width: auto;
+  width: 80%;
 }
 
 .myswitchlife-logo { max-height: 48px; }
@@ -507,4 +507,51 @@ h3 {
 }
 #new-goal-input {
   margin-bottom: 16px;
+}
+/* Mobile-first tweaks */
+@media (max-width: 768px) {
+  /* Stack dashboard panels vertically */
+  .dashboard {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Make recent‐activity entries wrap or stack */
+  .game-entry {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .game-entry img {
+    width: 100%;
+    max-width: 200px;
+    margin-bottom: 12px;
+  }
+
+  /* Shrink the library grid to two columns */
+  .game-library-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Ensure the “View All” link stays visible */
+  .view-all {
+    text-align: center;
+  }
+
+  /* Tweak modal padding/font on small screens */
+  .modal-content {
+    width: 90%;
+    padding: 16px;
+  }
+
+  /* Resize buttons/text for touch targets */
+  .icon-button,
+  #last-played-confirm,
+  #last-played-cancel {
+    padding: 10px 14px;
+    font-size: 1rem;
+  }
+    /* hide the center logo on phones */
+  .nav-center {
+    display: none;
+  }
 }

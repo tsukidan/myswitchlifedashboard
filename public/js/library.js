@@ -1,5 +1,8 @@
 // public/js/library.js
 
+// detect iOS so we can skip the tilt effect there
+const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 // Helper to build a full https:// URL and switch t_thumb → t_cover_big
 function buildCoverUrl(raw) {
   if (!raw) return null;
@@ -60,11 +63,17 @@ async function loadFullLibrary() {
     loading.style.display = 'none';
     grid.style.display   = 'grid';
 
-    // Tilt all covers
-    VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
-      max: 25, speed: 400, scale: 1.05,
-      glare: true, 'max-glare': 0.3, perspective: 1000
-    });
+    // Tilt all covers, but skip on iOS
+    if (!isIos) {
+      VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
+        max: 25,
+        speed: 400,
+        scale: 1.05,
+        glare: true,
+        'max-glare': 0.3,
+        perspective: 1000
+      });
+    }
 
     // Modal wiring
     const modal            = document.getElementById('game-modal');
@@ -77,11 +86,11 @@ async function loadFullLibrary() {
 
     function bindModal(card) {
       card.addEventListener('click', () => {
-        modalCover.src             = card.dataset.cover;
-        modalTitle.textContent     = card.dataset.name;
+        modalCover.src               = card.dataset.cover;
+        modalTitle.textContent       = card.dataset.name;
         modalTitleBottom.textContent = card.dataset.name;
-        modalRelease.textContent   = card.dataset.release;
-        modalSummary.textContent   = card.dataset.summary;
+        modalRelease.textContent     = card.dataset.release;
+        modalSummary.textContent     = card.dataset.summary;
         modal.classList.add('open');
       });
     }
