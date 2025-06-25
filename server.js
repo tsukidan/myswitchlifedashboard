@@ -4,7 +4,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 dotenv.config();
 
@@ -19,11 +19,13 @@ const client = new MongoClient(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 });
 let libraryCollection;
+let goalsCollection;
 
 async function connectToMongo() {
   await client.connect();
   const db = client.db('myswitchlife');
   libraryCollection = db.collection('library');
+  goalsCollection   = db.collection('goals');
   console.log('✅ MongoDB connected');
 }
 
@@ -75,9 +77,9 @@ function igdbQuery(limit) {
   `;
 }
 
-// === Library Routes (MongoDB) ===
+// === /api/games (your saved library) ===
 
-// GET /api/games — return saved library
+// GET — return saved library
 app.get('/api/games', async (req, res) => {
   try {
     const games = await libraryCollection.find({}).toArray();
@@ -88,7 +90,7 @@ app.get('/api/games', async (req, res) => {
   }
 });
 
-// POST /api/games — add or update a game with last_played
+// POST — add or update a game with optional last_played
 app.post('/api/games', async (req, res) => {
   try {
     const {
@@ -113,6 +115,7 @@ app.post('/api/games', async (req, res) => {
           cover,
           summary,
           first_release_date,
+          // if user supplied last_played date use it, otherwise default to today
           last_played: last_played || new Date().toISOString().split('T')[0],
         },
       },
@@ -126,7 +129,7 @@ app.post('/api/games', async (req, res) => {
   }
 });
 
-// DELETE /api/games?id=123 — remove a game
+// DELETE — remove a game by id
 app.delete('/api/games', async (req, res) => {
   try {
     const id = parseInt(req.query.id, 10);
@@ -141,7 +144,72 @@ app.delete('/api/games', async (req, res) => {
   }
 });
 
-// === IGDB Proxy Routes ===
+// === /api/goals (your persistent goals) ===
+
+// GET — list all goals
+app.get('/api/goals', async (req, res) => {
+  try {
+    const all = await goalsCollection.find({}).toArray();
+    res.status(200).json(all);
+  } catch (e) {
+    console.error('❌ /api/goals GET error:', e);
+    res.status(500).json({ error: 'Failed to load goals' });
+  }
+});
+
+// POST — add a new goal
+app.post('/api/goals', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid `text` field' });
+    }
+    const result = await goalsCollection.insertOne({
+      text,
+      done: false,
+      createdAt: new Date(),
+    });
+    // fetch the newly-created document so we can return it
+    const newGoal = await goalsCollection.findOne({ _id: result.insertedId });
+    res.status(201).json(newGoal);
+  } catch (e) {
+    console.error('❌ /api/goals POST error:', e);
+    res.status(500).json({ error: 'Failed to create goal' });
+  }
+});
+
+// DELETE — remove a goal
+app.delete('/api/goals', async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'No `id` provided' });
+    await goalsCollection.deleteOne({ _id: new ObjectId(id) });
+    res.status(200).json({ success: true });
+  } catch (e) {
+    console.error('❌ /api/goals DELETE error:', e);
+    res.status(500).json({ error: 'Failed to delete goal' });
+  }
+});
+
+// PATCH — toggle done state on a goal
+app.patch('/api/goals', async (req, res) => {
+  try {
+    const { id, done } = req.body;
+    if (!id || typeof done !== 'boolean') {
+      return res.status(400).json({ error: 'Missing `id` or invalid `done`' });
+    }
+    await goalsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { done } }
+    );
+    res.status(200).json({ success: true });
+  } catch (e) {
+    console.error('❌ /api/goals PATCH error:', e);
+    res.status(500).json({ error: 'Failed to update goal' });
+  }
+});
+
+// === IGDB proxy routes (unchanged) ===
 
 // GET /api/all-games — top 100 popular games
 app.get('/api/all-games', async (req, res) => {
@@ -197,7 +265,7 @@ app.get('/api/recent-games', async (req, res) => {
   }
 });
 
-// Serve index.html for root
+// Serve root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
