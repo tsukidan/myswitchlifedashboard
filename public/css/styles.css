@@ -21,7 +21,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  height: 120px;
+  height: 90px;
   position: relative;
 }
 
@@ -508,50 +508,34 @@ h3 {
 #new-goal-input {
   margin-bottom: 16px;
 }
-/* Mobile-first tweaks */
 @media (max-width: 768px) {
-  /* Stack dashboard panels vertically */
-  .dashboard {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Make recent‐activity entries wrap or stack */
-  .game-entry {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .game-entry img {
-    width: 100%;
-    max-width: 200px;
-    margin-bottom: 12px;
-  }
-
-  /* Shrink the library grid to two columns */
-  .game-library-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  /* Ensure the “View All” link stays visible */
-  .view-all {
-    text-align: center;
-  }
-
-  /* Tweak modal padding/font on small screens */
-  .modal-content {
-    width: 90%;
-    padding: 16px;
-  }
-
-  /* Resize buttons/text for touch targets */
-  .icon-button,
-  #last-played-confirm,
-  #last-played-cancel {
-    padding: 10px 14px;
-    font-size: 1rem;
-  }
-    /* hide the center logo on phones */
+  /* Hide the centered Nintendo logo on mobile */
   .nav-center {
     display: none;
+  }
+
+  /* Dashboard → single column */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    gap: 20px;
+    margin: 0 10px 20px; /* tighten side margins slightly */
+  }
+
+  /* Force panels to span that one column */
+  .recent-activity,
+  .game-library,
+  .goals,
+  .friends {
+    grid-column: 1;
+  }
+
+  /* Optional: reduce padding inside panels on mobile */
+  .recent-activity,
+  .game-library,
+  .goals,
+  .friends {
+    padding: 16px;
   }
 }
