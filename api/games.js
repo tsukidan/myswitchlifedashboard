@@ -3,12 +3,11 @@ const { MongoClient } = require('mongodb');
 
 let client;
 let collection;
-
 async function getCollection() {
   if (!collection) {
     client = new MongoClient(process.env.MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
     await client.connect();
     const db = client.db('myswitchlife');
@@ -21,13 +20,11 @@ module.exports = async (req, res) => {
   const col = await getCollection();
 
   if (req.method === 'GET') {
-    // Return the saved library
     const games = await col.find({}).toArray();
     return res.status(200).json(games);
   }
 
   if (req.method === 'POST') {
-    // Add or update a game, including last_played
     const { id, name, cover, summary, first_release_date, last_played } = req.body;
     if (!id || !name || !cover) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -41,6 +38,7 @@ module.exports = async (req, res) => {
           cover,
           summary,
           first_release_date,
+          // default last_played to today if none provided
           last_played: last_played || new Date().toISOString().split('T')[0]
         }
       },
@@ -50,7 +48,6 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'DELETE') {
-    // Remove by ?id=…
     const id = parseInt(req.query.id, 10);
     if (!id) {
       return res.status(400).json({ error: 'No ID provided' });
@@ -59,7 +56,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({ success: true });
   }
 
-  // Method not allowed
-  res.setHeader('Allow', ['GET','POST','DELETE']);
+  // Fallback for unsupported methods
+  res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 };
