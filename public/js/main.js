@@ -1,14 +1,15 @@
 // public/js/main.js
 
+// --- 1) Load Dashboard Games & Recent Activity ---
 async function loadDashboardGames() {
   try {
-    // === Load Recent Activity from your own DB ===
+    // Fetch your saved library (with last_played)
     const libRes = await fetch('/api/games');
     const allGames = await libRes.json();
 
-    // Filter to only those with last_played, sort most recent first, take top 9
+    // === Recent Activity ===
     const recent = allGames
-      .filter(game => game.last_played)
+      .filter(g => g.last_played)                            // only those with a date
       .sort((a, b) => new Date(b.last_played) - new Date(a.last_played))
       .slice(0, 9);
 
@@ -21,14 +22,14 @@ async function loadDashboardGames() {
       recentContainer.style.display = 'block';
     } else {
       recentContainer.innerHTML = recent.map(game => {
-        // build the cover URL (same as elsewhere)
         const imgURL = game.cover?.url
-          ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}`
+          ? `https:${game.cover.url.replace('t_thumb','t_cover_big')}`
           : 'https://via.placeholder.com/60x80?text=No+Cover';
 
-        // compute days ago
-        const diffMs   = Date.now() - new Date(game.last_played).getTime();
-        const daysAgo  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const daysAgo = Math.floor(
+          (Date.now() - new Date(game.last_played)) /
+          (1000 * 60 * 60 * 24)
+        );
 
         return `
           <div class="game-entry">
@@ -44,28 +45,20 @@ async function loadDashboardGames() {
       }).join('');
       recentContainer.style.display = 'flex';
     }
-
     recentLoading.style.display = 'none';
 
-    // Re-init tilt effect for recent covers
+    // Re-init tilt on recent covers
     VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
-      max: 25,
-      speed: 400,
-      scale: 1.05,
-      glare: true,
-      'max-glare': 0.3,
-      perspective: 1000
+      max:25, speed:400, scale:1.05, glare:true, 'max-glare':0.3, perspective:1000
     });
 
-    // === Load Game Library from your DB ===
-    const libraryRes   = await fetch('/api/games');
-    const libraryGames = await libraryRes.json();
-    const libraryGrid  = document.getElementById('game-library-grid');
+    // === Full Library ===
+    const libraryGrid    = document.getElementById('game-library-grid');
     const libraryLoading = document.getElementById('game-library-loading');
 
-    libraryGrid.innerHTML = libraryGames.map(game => {
+    libraryGrid.innerHTML = allGames.map(game => {
       const imgURL = game.cover?.url
-        ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}`
+        ? `https:${game.cover.url.replace('t_thumb','t_cover_big')}`
         : 'https://via.placeholder.com/264x374?text=No+Cover';
 
       return `
@@ -79,59 +72,109 @@ async function loadDashboardGames() {
     libraryLoading.style.display = 'none';
     libraryGrid.style.display   = 'grid';
 
-    // One more tilt init for library covers
+    // Tilt on library covers
     VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
-      max: 25,
-      speed: 400,
-      scale: 1.05,
-      glare: true,
-      'max-glare': 0.3,
-      perspective: 1000
+      max:25, speed:400, scale:1.05, glare:true, 'max-glare':0.3, perspective:1000
     });
 
   } catch (err) {
     console.error('Error loading dashboard data:', err);
-    const recentLoading = document.getElementById('recent-activity-loading');
-    recentLoading.textContent = 'Could not load recent activity.';
+    document.getElementById('recent-activity-loading').textContent =
+      'Could not load recent activity.';
   }
 }
 
-// === Dynamic Goal Management (unchanged) ===
-function setupGoalManagement() {
-  const goalList   = document.getElementById('goal-list');
-  const addGoalBtn = document.getElementById('add-goal-btn');
-  if (!goalList || !addGoalBtn) return;
+// --- 2) Load & Render Goals ---
+async function loadGoals() {
+  try {
+    const res   = await fetch('/api/goals');
+    const goals = await res.json();
+    const list  = document.getElementById('goal-list');
+    list.innerHTML = ''; // clear any placeholders
 
-  addGoalBtn.addEventListener('click', () => {
-    const li = document.createElement('li');
-    li.className = 'goal-item';
-    li.innerHTML = `
-      <input type="checkbox" />
-      <span contenteditable="true">New Goal</span>
-      <button class="remove-goal-btn icon-button" title="Remove Goal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-          <line x1="10" x2="10" y1="11" y2="17"/>
-          <line x1="14" x2="14" y1="11" y2="17"/>
-        </svg>
-      </button>
-    `;
-    goalList.appendChild(li);
+    goals.forEach(g => {
+      const li = document.createElement('li');
+      li.className   = 'goal-item';
+      li.dataset.id  = g._id;
+      li.innerHTML   = `
+        <input type="checkbox" ${g.done ? 'checked' : ''}/>
+        <span contenteditable="true">${g.text}</span>
+        <button class="remove-goal-btn icon-button" title="Remove Goal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+               viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
+      `;
+      list.appendChild(li);
+    });
+  } catch (e) {
+    console.error('Failed to load goals:', e);
+  }
+}
+
+// --- 3) Wire Up Add / Remove / Toggle Goals ---
+function setupGoalManagement() {
+  const list   = document.getElementById('goal-list');
+  const addBtn = document.getElementById('add-goal-btn');
+  if (!list || !addBtn) return;
+
+  // Add new goal
+  addBtn.addEventListener('click', async () => {
+    const text = prompt('Enter your new goal:');
+    if (!text) return;
+    try {
+      await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      await loadGoals();
+    } catch (e) {
+      console.error('Error adding goal:', e);
+    }
   });
 
-  goalList.addEventListener('click', (e) => {
+  // Delete goal
+  list.addEventListener('click', async e => {
     const btn = e.target.closest('.remove-goal-btn');
-    if (btn) {
-      const li = btn.closest('li');
-      if (li) li.remove();
+    if (!btn) return;
+    const li = btn.closest('li');
+    const id = li.dataset.id;
+    try {
+      await fetch(`/api/goals?id=${id}`, { method: 'DELETE' });
+      li.remove();
+    } catch (e) {
+      console.error('Error deleting goal:', e);
+    }
+  });
+
+  // Toggle done
+  list.addEventListener('change', async e => {
+    if (e.target.type !== 'checkbox') return;
+    const li   = e.target.closest('li');
+    const id   = li.dataset.id;
+    const done = e.target.checked;
+    try {
+      await fetch('/api/goals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, done })
+      });
+    } catch (e) {
+      console.error('Error toggling goal:', e);
     }
   });
 }
 
-// === Initialize on page load ===
+// --- Init on Page Load ---
 window.addEventListener('DOMContentLoaded', () => {
   loadDashboardGames();
+  loadGoals();
   setupGoalManagement();
 });
