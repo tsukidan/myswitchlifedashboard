@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/tsukidan/myswitchlife/raw/main/public/img/myswitchlifelogo.png" alt="MySwitchLife Logo" width="250"/>
+  <img src="https://raw.githubusercontent.com/tsukidan/myswitchlifedashboard/main/public/img/myswitchlifelogo.png" alt="MySwitchLife Logo" width="250"/>
 </p>
 <p align="center"><strong>Your Personal Nintendo Switch Companion</strong><br/>
 Keep track of your games, activity, friends, and gaming goals.</p>
@@ -41,13 +41,11 @@ The goal is to provide a simple way to view and manage everything in one place.
 
 ## UI Preview
 
-> Replace the image links below with real screenshots when available.
+### Homepage  
+![Dashboard Preview](https://raw.githubusercontent.com/tsukidan/myswitchlifedashboard/main/public/img/dashboard.png)
 
-### Homepage Mockup  
-![Homepage Wireframe](https://via.placeholder.com/800x500?text=Homepage+Mockup)
-
-### Game Activity Preview  
-![Game Panel Preview](https://via.placeholder.com/400x250?text=Game+Activity+Preview)
+### Game Activity  
+![Game Library Preview](https://raw.githubusercontent.com/tsukidan/myswitchlifedashboard/main/public/img/gamelibrary.png)
 
 ---
 
@@ -55,7 +53,7 @@ The goal is to provide a simple way to view and manage everything in one place.
 
 - **HTML5** and **CSS3**  
 - **JavaScript**  
-- **Node.js + Express**
+- **Node.js + Express**  
 - **MongoDB**
 
 ---
