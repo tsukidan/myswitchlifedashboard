@@ -4,12 +4,12 @@
 async function loadDashboardGames() {
   try {
     // Fetch your saved library (with last_played)
-    const libRes = await fetch('/api/games');
+    const libRes  = await fetch('/api/games');
     const allGames = await libRes.json();
 
     // === Recent Activity ===
     const recent = allGames
-      .filter(g => g.last_played)                            // only those with a date
+      .filter(g => g.last_played)                           // only those with a date
       .sort((a, b) => new Date(b.last_played) - new Date(a.last_played))
       .slice(0, 9);
 
@@ -94,17 +94,16 @@ async function loadGoals() {
 
     goals.forEach(g => {
       const li = document.createElement('li');
-      li.className   = 'goal-item';
-      li.dataset.id  = g._id;
-      li.innerHTML   = `
+      li.className  = 'goal-item';
+      li.dataset.id = g._id;
+      li.innerHTML = `
         <input type="checkbox" ${g.done ? 'checked' : ''}/>
         <span contenteditable="true">${g.text}</span>
         <button class="remove-goal-btn icon-button" title="Remove Goal">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/>
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
             <line x1="10" y1="11" x2="10" y2="17"/>
             <line x1="14" y1="11" x2="14" y2="17"/>
@@ -118,27 +117,11 @@ async function loadGoals() {
   }
 }
 
-// --- 3) Wire Up Add / Remove / Toggle Goals ---
+// --- 3) Wire Up Remove & Toggle Goals ---
 function setupGoalManagement() {
   const list   = document.getElementById('goal-list');
   const addBtn = document.getElementById('add-goal-btn');
   if (!list || !addBtn) return;
-
-  // Add new goal
-  addBtn.addEventListener('click', async () => {
-    const text = prompt('Enter your new goal:');
-    if (!text) return;
-    try {
-      await fetch('/api/goals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
-      await loadGoals();
-    } catch (e) {
-      console.error('Error adding goal:', e);
-    }
-  });
 
   // Delete goal
   list.addEventListener('click', async e => {
@@ -172,9 +155,58 @@ function setupGoalManagement() {
   });
 }
 
+// --- 4) Mini-Modal for Adding Goals ---
+function setupGoalModal() {
+  const addBtn = document.getElementById('add-goal-btn');
+  const modal  = document.getElementById('goal-modal');
+  const cancel = document.getElementById('goal-cancel');
+  const save   = document.getElementById('goal-save');
+  const input  = document.getElementById('new-goal-input');
+
+  // Open modal
+  addBtn.addEventListener('click', () => {
+    input.value = '';
+    modal.classList.add('open');
+    input.focus();
+  });
+
+  // Close without saving
+  cancel.addEventListener('click', () => {
+    modal.classList.remove('open');
+  });
+
+  // Save new goal
+  save.addEventListener('click', async () => {
+    const text = input.value.trim();
+    if (!text) {
+      input.focus();
+      return;
+    }
+    try {
+      await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      modal.classList.remove('open');
+      await loadGoals();
+    } catch (err) {
+      console.error('Error saving goal:', err);
+    }
+  });
+
+  // Click outside to close
+  modal.addEventListener('click', e => {
+    if (e.target === modal) {
+      modal.classList.remove('open');
+    }
+  });
+}
+
 // --- Init on Page Load ---
 window.addEventListener('DOMContentLoaded', () => {
   loadDashboardGames();
   loadGoals();
   setupGoalManagement();
+  setupGoalModal();
 });
