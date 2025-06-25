@@ -1,24 +1,21 @@
-// === public/library.js ===
+// public/js/library.js
 
-// Normalize IGDB cover URLs into a full https:// URL
-function normalizeCoverUrl(rawUrl) {
-  // IGDB often returns "//images.igdb.com/…"
-  if (rawUrl.startsWith('//')) {
-    return 'https:' + rawUrl.replace('t_thumb', 't_cover_big');
+// Helper to build a full https:// URL and switch t_thumb → t_cover_big
+function buildCoverUrl(raw) {
+  if (!raw) return null;
+  let url = raw;
+  // protocol-relative
+  if (url.startsWith('//')) {
+    url = 'https:' + url;
   }
-  // Just in case it ever returns "/path/…"
-  if (rawUrl.startsWith('/')) {
-    return 'https://images.igdb.com' + rawUrl.replace('t_thumb', 't_cover_big');
+  // root-relative (just in case)
+  else if (url.startsWith('/')) {
+    url = 'https://images.igdb.com' + url;
   }
-  // If it's already a full URL
-  if (rawUrl.startsWith('http')) {
-    return rawUrl.replace('t_thumb', 't_cover_big');
-  }
-  // Fallback
-  return rawUrl;
+  // now switch thumbnail → cover_big
+  return url.replace('t_thumb', 't_cover_big');
 }
 
-// Load and render the full game library with delete buttons and modal data
 async function loadFullLibrary() {
   try {
     const res = await fetch('/api/games');
@@ -28,10 +25,8 @@ async function loadFullLibrary() {
     const loading = document.getElementById('game-library-loading');
 
     grid.innerHTML = games.map(game => {
-      // apply normalization here
-      const coverURL = game.cover?.url
-        ? normalizeCoverUrl(game.cover.url)
-        : 'https://via.placeholder.com/264x374?text=No+Cover';
+      const coverURL = buildCoverUrl(game.cover?.url)
+        ?? 'https://via.placeholder.com/264x374?text=No+Cover';
 
       const release = game.first_release_date
         ? new Date(game.first_release_date * 1000).toLocaleDateString()
@@ -65,10 +60,10 @@ async function loadFullLibrary() {
     loading.style.display = 'none';
     grid.style.display   = 'grid';
 
-    // Tilt effect
+    // Tilt all covers
     VanillaTilt.init(document.querySelectorAll('.tilt-effect'), {
       max: 25, speed: 400, scale: 1.05,
-      glare: true, "max-glare": 0.3, perspective: 1000
+      glare: true, 'max-glare': 0.3, perspective: 1000
     });
 
     // Modal wiring
@@ -78,29 +73,35 @@ async function loadFullLibrary() {
     const modalTitleBottom = document.getElementById('modal-title-bottom');
     const modalRelease     = document.getElementById('modal-release');
     const modalSummary     = document.getElementById('modal-summary');
+    const closeBtn         = document.getElementById('modal-close');
 
     function bindModal(card) {
       card.addEventListener('click', () => {
-        modalCover.src           = card.dataset.cover;
-        modalTitle.textContent   = card.dataset.name;
+        modalCover.src             = card.dataset.cover;
+        modalTitle.textContent     = card.dataset.name;
         modalTitleBottom.textContent = card.dataset.name;
-        modalRelease.textContent = card.dataset.release;
-        modalSummary.textContent = card.dataset.summary;
+        modalRelease.textContent   = card.dataset.release;
+        modalSummary.textContent   = card.dataset.summary;
         modal.classList.add('open');
       });
     }
 
     grid.querySelectorAll('.library-game').forEach(card => {
-      // delete button
+      // remove handler
       const btn = card.querySelector('.remove-game-btn');
       btn.addEventListener('click', async e => {
         e.stopPropagation();
-        const id = card.dataset.id;
-        await fetch(`/api/games?id=${id}`, { method: 'DELETE' });
+        await fetch(`/api/games?id=${card.dataset.id}`, { method: 'DELETE' });
         card.remove();
       });
-      // modal open
+      // modal handler
       bindModal(card);
+    });
+
+    // close modal
+    closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.classList.remove('open');
     });
 
   } catch (err) {
