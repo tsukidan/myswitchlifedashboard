@@ -303,7 +303,7 @@ h3 {
   padding: 0;
 }
 .goals li {
-  display: flex;
+  display: inline;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
@@ -538,4 +538,66 @@ h3 {
   .friends {
     padding: 16px;
   }
+}
+/* ——————— Achievements & Goals Sections ——————— */
+
+/* container now a div, so we can freely inject sections */
+#goal-list {
+  margin-top: 16px;
+}
+
+/* each game header “pill” */
+.goal-section h4 {
+  background-color: #e60012;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  /* force it full-width so nothing floats beside it */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* list of goals under each pill */
+.goal-items {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  font-weight: bold;
+  border-radius: 10px;
+  background-color: #ccc;
+}
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.goal-item input[type="checkbox"] {
+  transform: scale(1.3);
+  margin: 0;
+}
+
+.goal-item span {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.goal-item .remove-goal-btn {
+  background: transparent;
+  padding: 4px;
+}
+.goal-item .remove-goal-btn svg {
+  stroke: #e60012;
+}
+.goal-item .remove-goal-btn:hover svg {
+  stroke: #c50010;
 }

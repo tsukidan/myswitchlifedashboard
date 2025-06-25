@@ -9,6 +9,7 @@
 </head>
 <body>
 
+  <!-- Navbar -->
   <div class="navbar">
     <div class="nav-left">
       <a href="index.html">
@@ -28,6 +29,7 @@
     </a>
   </div>
 
+  <!-- Welcome -->
   <div class="welcome-module">
     <div class="welcome-content">
       <div>
@@ -38,13 +40,16 @@
     </div>
   </div>
 
+  <!-- Dashboard Grid -->
   <div class="dashboard">
+    <!-- Recent Activity -->
     <div class="recent-activity">
       <h3>Recent Activity</h3>
       <div id="recent-activity-loading">Loading recent activity...</div>
       <div id="recent-activity-container" style="display: none;"></div>
     </div>
 
+    <!-- Game Library -->
     <div class="game-library">
       <h3>Your Game Library</h3>
       <div id="game-library-loading">Loading game library...</div>
@@ -52,23 +57,34 @@
       <p class="view-all"><a href="gamelibrary.html">View All</a></p>
     </div>
 
+    <!-- Achievements & Goals -->
     <div class="goals">
-      <h3>Current Gaming Goals
-        <button id="add-goal-btn" class="icon-button" title="Add Goal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-               fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14"/><path d="M12 5v14"/>
-          </svg>
-        </button>
-      </h3>
-      <ul id="goal-list">
-        <!-- Goals get injected here -->
-      </ul>
+      <h3>Achievements &amp; Goals</h3>
+
+      <!-- Game selector -->
+      <div class="goal-game-select-wrapper" style="margin-bottom:12px;">
+        <label for="goal-game-select">Pick a game:</label>
+        <select id="goal-game-select">
+          <option value="" disabled selected>Select a game</option>
+        </select>
+      </div>
+
+      <!-- Add button -->
+      <button id="add-goal-btn" class="icon-button" disabled title="Add Achievement or Goal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/><path d="M12 5v14"/>
+        </svg>
+        Add
+      </button>
+
+      <!-- Goals list -->
+      <div id="goal-list"></div>
     </div>
 
+    <!-- Friend Activity -->
     <div class="friends">
       <h3>Friend Activity</h3>
-
       <div class="friend-entry">
         <div class="friend-text">
           <span class="friend-name">Bowser <span class="username">(bowserfighter354)</span></span>
@@ -76,7 +92,6 @@
         </div>
         <img class="friend-avatar" src="/img/bowser.png" alt="Bowser Avatar">
       </div>
-
       <div class="friend-entry">
         <div class="friend-text">
           <span class="friend-name">Peach <span class="username">(peachyqueen89)</span></span>
@@ -84,7 +99,6 @@
         </div>
         <img class="friend-avatar" src="/img/peach.png" alt="Peach Avatar">
       </div>
-
       <div class="friend-entry">
         <div class="friend-text">
           <span class="friend-name">Luigi <span class="username">(luigi_mansion3)</span></span>
@@ -95,20 +109,21 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
-  <script src="/js/main.js"></script>
-
-  <!-- New Goal Mini-Modal -->
+  <!-- Add-Goal Mini-Modal -->
   <div id="goal-modal" class="modal-overlay">
     <div class="modal-content small-modal">
-      <h2>New Gaming Goal</h2>
+      <h2>Add Achievement / Goal</h2>
       <input type="text" id="new-goal-input" placeholder="Describe your goal…" />
-      <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+      <div style="margin-top:16px; text-align:right;">
         <button id="goal-cancel" class="icon-button">Cancel</button>
         <button id="goal-save"   class="icon-button">Save</button>
       </div>
     </div>
   </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+  <script src="/js/main.js"></script>
 
 </body>
 </html>

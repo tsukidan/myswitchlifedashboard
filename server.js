@@ -1,11 +1,12 @@
 // server.js
 const express = require('express');
-const axios = require('axios');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const path = require('path');
-const { MongoClient, ObjectId } = require('mongodb');
+const axios   = require('axios');
+const dotenv  = require('dotenv');
+const cors    = require('cors');
+const path    = require('path');
+const { MongoClient } = require('mongodb');
 
+// load env
 dotenv.config();
 
 const app = express();
@@ -19,19 +20,16 @@ const client = new MongoClient(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 });
 let libraryCollection;
-let goalsCollection;
 
 async function connectToMongo() {
   await client.connect();
   const db = client.db('myswitchlife');
   libraryCollection = db.collection('library');
-  goalsCollection   = db.collection('goals');
   console.log('✅ MongoDB connected');
 }
 
 // === Twitch/IGDB Token Management ===
 let accessToken = '';
-
 async function getAccessToken() {
   try {
     const resp = await axios.post(
@@ -39,9 +37,9 @@ async function getAccessToken() {
       null,
       {
         params: {
-          client_id: process.env.CLIENT_ID,
+          client_id:     process.env.CLIENT_ID,
           client_secret: process.env.CLIENT_SECRET,
-          grant_type: 'client_credentials',
+          grant_type:    'client_credentials',
         },
       }
     );
@@ -51,19 +49,16 @@ async function getAccessToken() {
     console.error('❌ Token fetch error:', e.response?.data || e.message);
   }
 }
-
 async function ensureAccessToken() {
-  if (!accessToken) {
-    await getAccessToken();
-  }
+  if (!accessToken) await getAccessToken();
 }
 
-// Build an IGDB query for popular Nintendo franchises
+// Build IGDB query
 function igdbQuery(limit) {
   const franchises = [
-    'mario', 'zelda', 'metroid', 'animal crossing',
-    'pokemon', 'kirby', 'donkey kong', 'splatoon',
-    'fire emblem', 'super smash bros',
+    'mario','zelda','metroid','animal crossing',
+    'pokemon','kirby','donkey kong','splatoon',
+    'fire emblem','super smash bros',
   ];
   const nameFilter = franchises.map(k => `name ~ *"${k}"*`).join(' | ');
   return `
@@ -77,9 +72,7 @@ function igdbQuery(limit) {
   `;
 }
 
-// === /api/games (your saved library) ===
-
-// GET — return saved library
+// === Library Routes (MongoDB) ===
 app.get('/api/games', async (req, res) => {
   try {
     const games = await libraryCollection.find({}).toArray();
@@ -90,38 +83,22 @@ app.get('/api/games', async (req, res) => {
   }
 });
 
-// POST — add or update a game with optional last_played
 app.post('/api/games', async (req, res) => {
   try {
-    const {
-      id,
-      name,
-      cover,
-      summary,
-      first_release_date,
-      last_played,
-    } = req.body;
-
+    const { id, name, cover, summary, first_release_date, last_played } = req.body;
     if (!id || !name || !cover) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-
     await libraryCollection.updateOne(
       { id },
       {
         $set: {
-          id,
-          name,
-          cover,
-          summary,
-          first_release_date,
-          // if user supplied last_played date use it, otherwise default to today
+          id, name, cover, summary, first_release_date,
           last_played: last_played || new Date().toISOString().split('T')[0],
         },
       },
       { upsert: true }
     );
-
     res.status(200).json({ success: true });
   } catch (e) {
     console.error('❌ /api/games POST error:', e);
@@ -129,13 +106,10 @@ app.post('/api/games', async (req, res) => {
   }
 });
 
-// DELETE — remove a game by id
 app.delete('/api/games', async (req, res) => {
   try {
     const id = parseInt(req.query.id, 10);
-    if (!id) {
-      return res.status(400).json({ error: 'No ID provided' });
-    }
+    if (!id) return res.status(400).json({ error: 'No ID provided' });
     await libraryCollection.deleteOne({ id });
     res.status(200).json({ success: true });
   } catch (e) {
@@ -144,74 +118,7 @@ app.delete('/api/games', async (req, res) => {
   }
 });
 
-// === /api/goals (your persistent goals) ===
-
-// GET — list all goals
-app.get('/api/goals', async (req, res) => {
-  try {
-    const all = await goalsCollection.find({}).toArray();
-    res.status(200).json(all);
-  } catch (e) {
-    console.error('❌ /api/goals GET error:', e);
-    res.status(500).json({ error: 'Failed to load goals' });
-  }
-});
-
-// POST — add a new goal
-app.post('/api/goals', async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid `text` field' });
-    }
-    const result = await goalsCollection.insertOne({
-      text,
-      done: false,
-      createdAt: new Date(),
-    });
-    // fetch the newly-created document so we can return it
-    const newGoal = await goalsCollection.findOne({ _id: result.insertedId });
-    res.status(201).json(newGoal);
-  } catch (e) {
-    console.error('❌ /api/goals POST error:', e);
-    res.status(500).json({ error: 'Failed to create goal' });
-  }
-});
-
-// DELETE — remove a goal
-app.delete('/api/goals', async (req, res) => {
-  try {
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: 'No `id` provided' });
-    await goalsCollection.deleteOne({ _id: new ObjectId(id) });
-    res.status(200).json({ success: true });
-  } catch (e) {
-    console.error('❌ /api/goals DELETE error:', e);
-    res.status(500).json({ error: 'Failed to delete goal' });
-  }
-});
-
-// PATCH — toggle done state on a goal
-app.patch('/api/goals', async (req, res) => {
-  try {
-    const { id, done } = req.body;
-    if (!id || typeof done !== 'boolean') {
-      return res.status(400).json({ error: 'Missing `id` or invalid `done`' });
-    }
-    await goalsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { done } }
-    );
-    res.status(200).json({ success: true });
-  } catch (e) {
-    console.error('❌ /api/goals PATCH error:', e);
-    res.status(500).json({ error: 'Failed to update goal' });
-  }
-});
-
-// === IGDB proxy routes (unchanged) ===
-
-// GET /api/all-games — top 100 popular games
+// === IGDB Proxy Routes ===
 app.get('/api/all-games', async (req, res) => {
   try {
     await ensureAccessToken();
@@ -234,7 +141,6 @@ app.get('/api/all-games', async (req, res) => {
   }
 });
 
-// GET /api/recent-games — top Mario titles (you can customize later)
 app.get('/api/recent-games', async (req, res) => {
   try {
     await ensureAccessToken();
@@ -265,7 +171,12 @@ app.get('/api/recent-games', async (req, res) => {
   }
 });
 
-// Serve root
+// === Goals Routes ===
+// mount your existing serverless handler:
+const goalsHandler = require('./api/goals.js');
+app.all('/api/goals', goalsHandler);
+
+// serve front‐end
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

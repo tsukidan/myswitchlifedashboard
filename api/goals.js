@@ -6,7 +6,10 @@ let collection;
 
 async function getCollection() {
   if (!collection) {
-    client = new MongoClient(process.env.MONGODB_URI);
+    client = new MongoClient(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     await client.connect();
     const db = client.db('myswitchlife');
     collection = db.collection('goals');
@@ -20,6 +23,7 @@ module.exports = async (req, res) => {
   switch (req.method) {
     case 'GET':
       {
+        // Return all goals
         const all = await col.find({}).toArray();
         res.status(200).json(all);
       }
@@ -27,19 +31,31 @@ module.exports = async (req, res) => {
 
     case 'POST':
       {
-        const { text } = req.body;
-        if (!text || typeof text !== 'string') {
-          return res.status(400).json({ error: 'Missing or invalid `text` field' });
+        // Expect both text and gameId
+        const { text, gameId } = req.body;
+        if (!text || typeof text !== 'string' || !gameId) {
+          return res
+            .status(400)
+            .json({ error: 'Missing or invalid `text` or `gameId`' });
         }
-        const result = await col.insertOne({ text, done: false, createdAt: new Date() });
-        res.status(201).json({ ...result.ops[0], _id: result.insertedId });
+        const doc = {
+          text,
+          gameId: String(gameId),
+          done: false,
+          createdAt: new Date(),
+        };
+        const result = await col.insertOne(doc);
+        // include the new _id in response
+        res.status(201).json({ ...doc, _id: result.insertedId });
       }
       break;
 
     case 'DELETE':
       {
         const { id } = req.query;
-        if (!id) return res.status(400).json({ error: 'No `id` provided' });
+        if (!id) {
+          return res.status(400).json({ error: 'No `id` provided' });
+        }
         await col.deleteOne({ _id: new ObjectId(id) });
         res.status(200).json({ success: true });
       }
@@ -47,9 +63,12 @@ module.exports = async (req, res) => {
 
     case 'PATCH':
       {
+        // Toggle done
         const { id, done } = req.body;
         if (!id || typeof done !== 'boolean') {
-          return res.status(400).json({ error: 'Missing `id` or invalid `done`' });
+          return res
+            .status(400)
+            .json({ error: 'Missing `id` or invalid `done`' });
         }
         await col.updateOne(
           { _id: new ObjectId(id) },
