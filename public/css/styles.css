@@ -602,3 +602,15 @@ h3 {
 #last-played-modal.modal-overlay {
   backdrop-filter: blur(3px);
 }
+/* New Goal Modal tweaks */
+#goal-modal .modal-content.small-modal {
+  max-width: 360px;
+  padding: 24px;
+}
+#new-goal-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
