@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySwitchLife – User Settings</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-left">
+      <a href="index.html">
+        <img src="/img/myswitchlifelogo.png" alt="MySwitchLife Logo" class="myswitchlife-logo"/>
+      </a>
+    </div>
+    <div class="nav-center">
+      <img src="/img/nintendologo.png" alt="Nintendo Logo" class="nintendo-logo"/>
+    </div>
+    <a href="usersettings.html" class="account-button" title="User Settings">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+           fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 20a6 6 0 0 0-12 0"/>
+        <circle cx="12" cy="10" r="4"/>
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+    </a>
+  </div>
+
+  <main style="max-width: 1000px; margin: 20px auto;">
+
+    <!-- Welcome -->
+    <h2 style="margin-bottom: 24px;">Welcome, Mario.</h2>
+
+    <!-- Profile Information + Avatar -->
+    <div class="settings-card" style="display: flex; align-items: center; gap: 24px;">
+      <div style="flex: 1;">
+        <h3>Profile Information</h3>
+        <p><strong>Email:</strong> mario.gamer@example.com</p>
+        <p><strong>Username:</strong> supermario123</p>
+        <strong>Phone:</strong> ***-***-1234</p>
+        <button class="icon-button" style="background-color: #e60012;">
+          Account Deletion
+        </button>
+      </div>
+      <div>
+        <div class="user-avatar"
+             style="width: 120px; height: 120px;
+                    background-image: url('/img/mario-avatar.jpg');
+                    background-size: cover;
+                    background-position: center;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Gamelist Settings -->
+    <div class="settings-card">
+      <h3>Gamelist Settings</h3>
+      <button class="icon-button" style="margin-right: 8px;">Display Options</button>
+      <button class="icon-button">View &amp; Filter Defaults</button>
+    </div>
+
+    <!-- Friend List Settings -->
+    <div class="settings-card">
+      <h3>Friend List Settings</h3>
+      <button class="icon-button" style="margin-right: 8px;">Add / Remove Friends</button>
+      <button class="icon-button">Block List</button>
+    </div>
+
+  </main>
+
+</body>
+</html>

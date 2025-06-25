@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MySwitchLife - Dashboard</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-left">
+      <a href="index.html">
+        <img src="/img/myswitchlifelogo.png" alt="MySwitchLife Logo" class="myswitchlife-logo"/>
+      </a>
+    </div>
+  <div class="nav-center">
+    <img src="/img/nintendologo.png" alt="Nintendo Logo" class="nintendo-logo"/>
+  </div>
+  <!-- Updated: wrap the icon in an <a> -->
+  <a href="usersettings.html" class="account-button" title="User Settings">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+         fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 20a6 6 0 0 0-12 0"/>
+      <circle cx="12" cy="10" r="4"/>
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+  </a>
+</div>
+
+
+  <div class="welcome-module">
+    <div class="welcome-content">
+      <div>
+        <h1>Welcome Back, Mario.</h1>
+        <p>Here's what's new on your Switch.</p>
+      </div>
+      <div class="user-avatar"></div>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="recent-activity">
+      <h3>Recent Activity</h3>
+      <div id="recent-activity-loading">Loading recent activity...</div>
+      <div id="recent-activity-container" style="display: none;"></div>
+    </div>
+
+    <div class="game-library">
+      <h3>Your Game Library</h3>
+      <div id="game-library-loading">Loading game library...</div>
+      <div id="game-library-grid" class="game-library-grid" style="display: none;"></div>
+      <p class="view-all">
+        <a href="gamelibrary.html">View All</a>
+      </p>
+    </div>
+
+    <div class="goals">
+      <h3>Current Gaming Goals
+        <button id="add-goal-btn" class="icon-button" title="Add Goal" data-action="add-goal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="M12 5v14"/>
+          </svg>
+        </button>
+      </h3>
+      <ul id="goal-list">
+        <li class="goal-item">
+          <input type="checkbox" />
+          <span contenteditable="true">Beat Bowser in Super Mario Odyssey</span>
+          <button class="remove-goal-btn icon-button" data-action="remove-goal" title="Remove Goal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              <line x1="10" x2="10" y1="11" y2="17"/>
+              <line x1="14" x2="14" y1="11" y2="17"/>
+            </svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="friends">
+      <h3>Friend Activity</h3>
+
+      <div class="friend-entry">
+        <div class="friend-text">
+          <span class="friend-name">Bowser <span class="username">(bowserfighter354)</span></span>
+          <em class="friend-subtext">Recently Played: Super Smash Bros. Ultimate for 1h 45m</em>
+        </div>
+        <img class="friend-avatar" src="/img/bowser.png" alt="Bowser Avatar">
+      </div>
+
+      <div class="friend-entry">
+        <div class="friend-text">
+          <span class="friend-name">Peach <span class="username">(peachyqueen89)</span></span>
+          <em class="friend-subtext">Recently Played: Mario Kart 8 Deluxe for 2h 30m</em>
+        </div>
+        <img class="friend-avatar" src="/img/peach.png" alt="Peach Avatar">
+      </div>
+
+      <div class="friend-entry">
+        <div class="friend-text">
+          <span class="friend-name">Luigi <span class="username">(luigi_mansion3)</span></span>
+          <em class="friend-subtext">Recently Played: Luigi's Mansion 3 for 3h 10m</em>
+        </div>
+        <img class="friend-avatar" src="/img/luigi.png" alt="Luigi Avatar">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+  <script src="/js/main.js"></script>
+
+</body>
+</html>

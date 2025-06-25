@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySwitchLife – Full Library</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div class="navbar">
+    <div class="nav-left">
+      <a href="index.html">
+        <img src="/img/myswitchlifelogo.png" alt="MySwitchLife Logo" class="myswitchlife-logo"/>
+      </a>
+    </div>
+  <div class="nav-center">
+    <img src="/img/nintendologo.png" alt="Nintendo Logo" class="nintendo-logo"/>
+  </div>
+  <!-- Updated: wrap the icon in an <a> -->
+  <a href="usersettings.html" class="account-button" title="User Settings">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+         fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 20a6 6 0 0 0-12 0"/>
+      <circle cx="12" cy="10" r="4"/>
+      <circle cx="12" cy="12" r="10"/>
+    </svg>
+  </a>
+</div>
+
+  <div class="game-library" style="margin:40px auto; max-width:1200px;">
+    <h3>Your Game Library</h3>
+
+    <!-- Add-Game Dropdown -->
+    <div class="add-game-form" style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+      <label for="add-game-select">Add a game:</label>
+      <select id="add-game-select">
+        <option value="" disabled selected>Select a game</option>
+      </select>
+      <button id="confirm-add-game" class="icon-button" title="Add Game">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+             fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/>
+          <path d="M12 5v14"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Library Grid -->
+    <div id="game-library-loading">Loading game library...</div>
+    <div id="game-library-grid" class="game-library-grid"></div>
+
+    <p class="view-all" style="text-align:center; margin-top:20px;">
+      <a href="index.html">Back to Dashboard</a>
+    </p>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="game-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button id="modal-close" class="modal-close">&times;</button>
+      <div class="modal-left">
+        <!-- canvas will show the empty case + game art -->
+        <canvas id="case-canvas"></canvas>
+        <div id="modal-title-bottom" class="modal-title-bottom"></div>
+      </div>
+      <div class="modal-right">
+        <h2 id="modal-title"></h2>
+        <p id="modal-release"></p>
+        <p id="modal-summary"></p>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+  <script src="/js/library.js"></script>
+  <script src="/js/library-dropdown.js"></script>
+  <script src="/js/modal.js"></script>
+</body>
+</html>
