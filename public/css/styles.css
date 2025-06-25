@@ -538,3 +538,65 @@ h3 {
   padding: 10px;
   font-size: 16px;
 }
+/* ————— Last-Played Modal Polished Styles ————— */
+.small-modal {
+  max-width: 400px;
+  width: 90%;
+  padding: 24px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+/* Modal Heading */
+.small-modal h2 {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Date Input */
+#last-played-modal input[type="date"] {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+/* Button Container */
+.small-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Cancel Button */
+#last-played-cancel {
+  background-color: #ddd;
+  color: #333;
+  border-radius: 6px;
+  padding: 8px 16px;
+}
+#last-played-cancel:hover {
+  background-color: #ccc;
+}
+
+/* Save Button */
+#last-played-confirm {
+  background-color: #e60012;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 16px;
+}
+#last-played-confirm:hover {
+  background-color: #c50010;
+}
+
+/* (Optional) Slight blur behind this modal for focus) */
+#last-played-modal.modal-overlay {
+  backdrop-filter: blur(3px);
+}
